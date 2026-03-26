@@ -4,21 +4,21 @@ import logging
 from typing import Any
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 from src.config import EMBEDDING_BATCH_SIZE, EMBEDDING_MODEL
 from src.models.company import Company
 
 logger = logging.getLogger(__name__)
 
-_model: SentenceTransformer | None = None
+_model: TextEmbedding | None = None
 
 
-def get_model() -> SentenceTransformer:
+def get_model() -> TextEmbedding:
     global _model
     if _model is None:
         logger.info("Loading embedding model: %s", EMBEDDING_MODEL)
-        _model = SentenceTransformer(EMBEDDING_MODEL)
+        _model = TextEmbedding(EMBEDDING_MODEL)
     return _model
 
 
@@ -73,15 +73,11 @@ def encode_texts(texts: list[str]) -> np.ndarray:
     """Encode a list of texts into embeddings using the configured model.
 
     Returns a 2-D float32 array of shape (len(texts), VECTOR_SIZE).
+    FastEmbed uses ONNX Runtime — no PyTorch required.
     """
     model = get_model()
-    embeddings: np.ndarray = model.encode(
-        texts,
-        batch_size=EMBEDDING_BATCH_SIZE,
-        show_progress_bar=False,
-        normalize_embeddings=True,  # cosine similarity = dot product after L2-norm
-        convert_to_numpy=True,
-    )
+    # fastembed.embed() returns a generator of numpy arrays
+    embeddings = np.array(list(model.embed(texts, batch_size=EMBEDDING_BATCH_SIZE)))
     return embeddings.astype(np.float32)
 
 
