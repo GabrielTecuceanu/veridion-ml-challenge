@@ -7,14 +7,14 @@ import os
 
 QDRANT_URL: str = os.getenv("QDRANT_URL", ":memory:")
 QDRANT_COLLECTION: str = "companies"
-QDRANT_VECTOR_SIZE: int = 1024  # BAAI/bge-m3 output dimension
-QDRANT_DISTANCE: str = "Cosine"
+QDRANT_VECTOR_SIZE: int = 1024  # intfloat/multilingual-e5-large output dimension
+QDRANT_DISTANCE: str = "COSINE"
 QDRANT_HNSW_EF: int = 128       # ef_construct; ef at query time defaults to same
 
 # ---------------------------------------------------------------------------
 # Embedding model
 # ---------------------------------------------------------------------------
-EMBEDDING_MODEL: str = "BAAI/bge-m3"
+EMBEDDING_MODEL: str = "intfloat/multilingual-e5-large"
 EMBEDDING_BATCH_SIZE: int = 32
 
 # ---------------------------------------------------------------------------

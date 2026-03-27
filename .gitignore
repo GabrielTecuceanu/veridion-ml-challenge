@@ -46,3 +46,5 @@ results/*.json
 
 # Logs
 *.log
+
+data/naics_inventory.json

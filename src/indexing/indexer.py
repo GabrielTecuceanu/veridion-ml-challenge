@@ -120,7 +120,7 @@ def _build_naics_inventory(companies: list[Any]) -> dict[str, str]:
 def _ensure_collection(client: QdrantClient) -> None:
     existing = {c.name for c in client.get_collections().collections}
     if QDRANT_COLLECTION not in existing:
-        distance = Distance[QDRANT_DISTANCE]  # e.g. Distance["Cosine"]
+        distance = Distance[QDRANT_DISTANCE]
         client.create_collection(
             collection_name=QDRANT_COLLECTION,
             vectors_config=VectorParams(size=QDRANT_VECTOR_SIZE, distance=distance),
