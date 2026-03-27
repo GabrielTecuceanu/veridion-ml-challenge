@@ -119,7 +119,7 @@ def normalize_company(raw: dict[str, Any]) -> Company:
         business_model = []
 
     # Build the id from website (unique identifier in the dataset)
-    company_id = raw.get("website", "").strip()
+    company_id = (raw.get("website") or "").strip()
 
     # Synthesize description from available fields if empty
     description: str = (raw.get("description") or "").strip()
