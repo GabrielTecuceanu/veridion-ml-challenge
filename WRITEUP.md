@@ -379,6 +379,12 @@ docker compose up
 
 Results are written to `./results/` on the host.
 
+To run a custom query instead of the 12 test queries:
+
+```bash
+QUERY="your query here" docker compose up app
+```
+
 Without a GPU, Ollama falls back to CPU inference (correct results, slower LLM calls).
 
 ---
