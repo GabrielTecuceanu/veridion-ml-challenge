@@ -6,6 +6,7 @@ from typing import TypeVar, Type
 
 import instructor
 import ollama
+from openai import OpenAI
 from pydantic import BaseModel
 
 from src.config import (
@@ -22,9 +23,9 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def _build_instructor_client() -> instructor.Instructor:
-    """Create an instructor-patched Ollama client."""
-    raw = ollama.Client(host=OLLAMA_BASE_URL, timeout=OLLAMA_TIMEOUT)
-    return instructor.from_ollama(raw, mode=instructor.Mode.JSON)
+    """Create an instructor-patched Ollama client via OpenAI-compatible API."""
+    raw = OpenAI(base_url=f"{OLLAMA_BASE_URL}/v1", api_key="ollama", timeout=OLLAMA_TIMEOUT)
+    return instructor.from_openai(raw, mode=instructor.Mode.JSON)
 
 
 _client: instructor.Instructor | None = None
@@ -62,7 +63,7 @@ def structured_completion(
                 model=OLLAMA_MODEL,
                 messages=messages,
                 response_model=response_model,
-                options={"temperature": temperature},
+                temperature=temperature,
             )
             return result
         except Exception as exc:
