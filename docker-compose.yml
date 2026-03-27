@@ -1,0 +1,46 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Pull the model on first start, then keep serving
+    entrypoint: >
+      sh -c "ollama serve &
+             sleep 5 &&
+             ollama pull qwen3:8b &&
+             wait"
+
+  app:
+    build: .
+    depends_on:
+      - qdrant
+      - ollama
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./results:/app/results
+      - ./data:/app/data
+    # Wait for Qdrant and Ollama to be reachable before running
+    command: >
+      sh -c "
+        echo 'Waiting for Qdrant...' &&
+        until curl -sf http://qdrant:6333/healthz; do sleep 2; done &&
+        echo 'Waiting for Ollama...' &&
+        until curl -sf http://ollama:11434/api/tags; do sleep 2; done &&
+        echo 'Services ready. Running pipeline...' &&
+        python -m src.main
+      "
+
+volumes:
+  qdrant_data:
+  ollama_data:

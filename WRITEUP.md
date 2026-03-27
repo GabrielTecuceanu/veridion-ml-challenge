@@ -363,7 +363,27 @@ All tunable parameters live in `config.py`. No magic numbers in pipeline code.
 
 ---
 
-## 10. Time Breakdown
+## 10. Running with Docker
+
+Requires Docker and Docker Compose. The first run downloads `qwen3:8b` (~6GB) into a named volume.
+
+```bash
+docker compose up --build
+```
+
+On subsequent runs the model and Qdrant data are reused from volumes - no re-download, no re-indexing:
+
+```bash
+docker compose up
+```
+
+Results are written to `./results/` on the host.
+
+Without a GPU, Ollama falls back to CPU inference (correct results, slower LLM calls).
+
+---
+
+## 11. Time Breakdown
 
 | Phase                                  | Time          |
 | -------------------------------------- | ------------- |

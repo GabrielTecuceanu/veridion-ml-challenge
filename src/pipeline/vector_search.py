@@ -69,13 +69,14 @@ def search(
     vectors = encode_texts([query_text])
     query_vector = vectors[0].tolist()
 
-    results: list[ScoredPoint] = client.search(
+    response = client.query_points(
         collection_name=QDRANT_COLLECTION,
-        query_vector=query_vector,
+        query=query_vector,
         query_filter=qdrant_filter,
         limit=top_k,
         with_payload=True,
     )
+    results: list[ScoredPoint] = response.points
 
     logger.info("Vector search returned %d candidates", len(results))
     return [_scored_point_to_match(p) for p in results]
