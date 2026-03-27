@@ -22,6 +22,17 @@ def _scored_point_to_match(point: ScoredPoint) -> CompanyMatch:
     """
     payload: dict[str, Any] = point.payload or {}
 
+    # Reconstruct primary_naics dict from flat payload fields set by indexer
+    primary_naics: dict | None = None
+    pn_code = payload.get("primary_naics_code")
+    pn_label = payload.get("primary_naics_label")
+    if pn_code:
+        primary_naics = {"code": pn_code, "label": pn_label or ""}
+
+    # Reconstruct secondary_naics list
+    sec_codes: list[str] = payload.get("secondary_naics_codes") or []
+    secondary_naics = [{"code": c, "label": ""} for c in sec_codes]
+
     company = Company(
         id=str(point.id),
         name=payload.get("name", ""),
@@ -32,8 +43,8 @@ def _scored_point_to_match(point: ScoredPoint) -> CompanyMatch:
         revenue=payload.get("revenue"),
         year_founded=payload.get("year_founded"),
         business_model=payload.get("business_model") or [],
-        primary_naics=payload.get("primary_naics"),
-        secondary_naics=payload.get("secondary_naics") or [],
+        primary_naics=primary_naics,
+        secondary_naics=secondary_naics,
         tags=payload.get("tags") or [],
         raw=payload,
     )
