@@ -379,6 +379,12 @@ docker compose up
 
 Results are written to `./results/` on the host.
 
+To run a custom query instead of the 12 test queries:
+
+```bash
+QUERY="your query here" docker compose up app
+```
+
 Without a GPU, Ollama falls back to CPU inference (correct results, slower LLM calls).
 
 ---
@@ -393,4 +399,4 @@ Without a GPU, Ollama falls back to CPU inference (correct results, slower LLM c
 | Docker, documentation, cleanup         | ~2 hours      |
 | **Total**                              | **~17 hours** |
 
-The majority of implementation time went into the metadata filter builder (null-inclusive OR logic across all field types) and the scoring system (getting NAICS hierarchical scoring and constraint satisfaction to correctly handle nulls). The architecture itself was settled early - the exploration phase revealed enough about the data to design the funnel before writing a line of pipeline code.
+The majority of implementation time went into the metadata filter builder (null-inclusive OR logic across all field types) and the scoring system (getting NAICS hierarchical scoring and constraint satisfaction to correctly handle nulls). The architecture itself was settled early - the exploration phase revealed enough about the data to design the funnel before writing a line of pipeline code

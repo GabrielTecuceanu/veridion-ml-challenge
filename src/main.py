@@ -88,6 +88,22 @@ def run_all(queries: list[str], ensure_index: bool = True) -> None:
 
 
 def main() -> None:
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description="Company qualification pipeline")
+    parser.add_argument(
+        "query",
+        nargs="?",
+        help="Run a single custom query instead of the 12 test queries",
+    )
+    args = parser.parse_args()
+
+    custom_query = args.query or os.environ.get("QUERY", "").strip()
+    if custom_query:
+        run_all([custom_query])
+        return
+
     with QUERIES_FILE.open() as f:
         data = json.load(f)
 
