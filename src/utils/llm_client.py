@@ -5,7 +5,6 @@ import logging
 from typing import TypeVar, Type
 
 import instructor
-import ollama
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -81,23 +80,3 @@ def structured_completion(
     raise RuntimeError(
         f"LLM structured completion failed after {max_retries} attempts"
     ) from last_exc
-
-
-def raw_completion(
-    prompt: str,
-    system: str = "",
-    temperature: float = OLLAMA_TEMPERATURE,
-) -> str:
-    """Plain (non-structured) Ollama completion. Returns the response string."""
-    raw = ollama.Client(host=OLLAMA_BASE_URL, timeout=OLLAMA_TIMEOUT)
-    messages: list[dict[str, str]] = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-
-    response = raw.chat(
-        model=OLLAMA_MODEL,
-        messages=messages,
-        options={"temperature": temperature},
-    )
-    return response["message"]["content"]
