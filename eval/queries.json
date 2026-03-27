@@ -1,3 +1,16 @@
 {
-  "queries": []
+  "queries": [
+    "B2B SaaS companies in Germany with more than 100 employees",
+    "Logistics and transportation companies in Romania",
+    "Find me suppliers of eco-friendly packaging for cosmetics brands",
+    "Public manufacturing companies in Scandinavia founded after 2000",
+    "Software companies in the DACH region with revenue over $10M",
+    "Who are the main providers of cold-chain logistics services in Europe?",
+    "Find B2C e-commerce companies in France with fewer than 50 employees",
+    "Suppliers of industrial automation components to automotive manufacturers",
+    "Healthcare technology companies in the Benelux region",
+    "Private equity-backed fintech companies in the UK",
+    "Companies providing managed IT services to small businesses in CEE",
+    "Renewable energy equipment manufacturers in Spain or Portugal"
+  ]
 }
