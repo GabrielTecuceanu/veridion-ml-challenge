@@ -4,7 +4,7 @@ import ast
 import logging
 from typing import Any
 
-from src.config import REVENUE_SANITY_CAP
+from src.config import BUSINESS_MODEL_ALIASES, REVENUE_SANITY_CAP
 from src.models.company import Company
 
 logger = logging.getLogger(__name__)
@@ -114,9 +114,12 @@ def normalize_company(raw: dict[str, Any]) -> Company:
         except (TypeError, ValueError):
             year_founded = None
 
-    business_model: list[str] = raw.get("business_model") or []
-    if not isinstance(business_model, list):
-        business_model = []
+    raw_bm: list[str] = raw.get("business_model") or []
+    if not isinstance(raw_bm, list):
+        raw_bm = []
+    business_model: list[str] = [
+        BUSINESS_MODEL_ALIASES.get(v.lower(), v) for v in raw_bm if isinstance(v, str)
+    ]
 
     # website is the unique identifier in the dataset
     company_id = (raw.get("website") or "").strip()
