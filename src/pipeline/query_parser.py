@@ -13,15 +13,15 @@ Your task: parse a natural-language company search query into a structured JSON 
 
 Guidelines:
 - query_type:
-    "structured"  → query uses only hard filters (location, size, industry, business model, founding year)
-    "hybrid"      → mix of hard filters + soft semantic criteria
-    "reasoning"   → supply-chain / ecosystem / inferred-role queries that require logical deduction
+    "structured"  -> query uses only hard filters (location, size, industry, business model, founding year)
+    "hybrid"      -> mix of hard filters + soft semantic criteria
+    "reasoning"   -> supply-chain / ecosystem / inferred-role queries that require logical deduction
 - naics_codes: predict the most relevant 6-digit NAICS codes (top 3 max). Leave empty if truly unclear.
 - location.resolved_countries: resolve region names to ISO-2 codes.
-  Examples: "Scandinavia" → ["SE","NO","DK","FI"], "Benelux" → ["BE","NL","LU"],
-  "DACH" → ["DE","AT","CH"], "CEE" → ["CZ","PL","HU","RO","SK","BG","HR","SI","EE","LV","LT"]
+  Examples: "Scandinavia" -> ["SE","NO","DK","FI"], "Benelux" -> ["BE","NL","LU"],
+  "DACH" -> ["DE","AT","CH"], "CEE" -> ["CZ","PL","HU","RO","SK","BG","HR","SI","EE","LV","LT"]
 - numeric_filters: extract employee_count / revenue / year_founded constraints.
-  Revenue values like "$50M" → 50000000, "$1B" → 1000000000.
+  Revenue values like "$50M" -> 50000000, "$1B" -> 1000000000.
 - business_model_filter: use FULL strings only:
   "Business-to-Business", "Business-to-Consumer", "Business-to-Government",
   "Software-as-a-Service", "Marketplace", "Wholesale", "Retail", "Enterprise",
@@ -30,7 +30,7 @@ Guidelines:
   (e.g. "specialises in cold-chain logistics", "serves luxury brands").
 - ecosystem_role + target_beneficiary: fill ONLY for supply-chain queries.
   e.g. "suppliers of eco-friendly packaging for cosmetics brands"
-       → ecosystem_role="supplier", target_beneficiary="cosmetics brands"
+       -> ecosystem_role="supplier", target_beneficiary="cosmetics brands"
 """
 
 
@@ -38,7 +38,7 @@ def parse_query(raw_query: str) -> QueryIntent:
     """Stage 0: parse a natural-language query into a QueryIntent.
 
     Uses instructor-enforced structured output via Ollama. Applies the
-    semantic_criteria guard (forces query_type ≥ "hybrid") via the
+    semantic_criteria guard (forces query_type >= "hybrid") via the
     QueryIntent model_validator.
     """
     logger.info("Parsing query: %r", raw_query)

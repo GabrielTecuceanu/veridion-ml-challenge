@@ -15,6 +15,7 @@ from qdrant_client.models import (
 )
 
 from src.config import (
+    EMBEDDING_MODEL,
     INDEXER_BATCH_UPSERT,
     QDRANT_COLLECTION,
     QDRANT_DISTANCE,
@@ -30,10 +31,6 @@ DATA_DIR = Path(__file__).parent.parent.parent / "data"
 COMPANIES_FILE = DATA_DIR / "companies.jsonl"
 NAICS_INVENTORY_FILE = DATA_DIR / "naics_inventory.json"
 
-
-# ---------------------------------------------------------------------------
-# Payload helpers
-# ---------------------------------------------------------------------------
 
 def _data_completeness(company_raw: dict[str, Any], company_obj: Any) -> float:
     """Pre-compute a data-completeness score [0, 1] at indexing time."""
@@ -92,12 +89,8 @@ def _build_payload(company: Any) -> dict[str, Any]:
     }
 
 
-# ---------------------------------------------------------------------------
-# NAICS inventory
-# ---------------------------------------------------------------------------
-
 def _build_naics_inventory(companies: list[Any]) -> dict[str, str]:
-    """Collect all NAICS code → label mappings present in the dataset."""
+    """Collect all NAICS code -> label mappings present in the dataset."""
     inventory: dict[str, str] = {}
     for c in companies:
         if c.primary_naics:
@@ -113,10 +106,6 @@ def _build_naics_inventory(companies: list[Any]) -> dict[str, str]:
     return dict(sorted(inventory.items()))
 
 
-# ---------------------------------------------------------------------------
-# Qdrant collection setup
-# ---------------------------------------------------------------------------
-
 def _ensure_collection(client: QdrantClient) -> None:
     existing = {c.name for c in client.get_collections().collections}
     if QDRANT_COLLECTION not in existing:
@@ -127,12 +116,8 @@ def _ensure_collection(client: QdrantClient) -> None:
         )
         logger.info("Created Qdrant collection '%s'", QDRANT_COLLECTION)
     else:
-        logger.info("Qdrant collection '%s' already exists — skipping creation", QDRANT_COLLECTION)
+        logger.info("Qdrant collection '%s' already exists - skipping creation", QDRANT_COLLECTION)
 
-
-# ---------------------------------------------------------------------------
-# Main indexer
-# ---------------------------------------------------------------------------
 
 def load_companies(path: Path = COMPANIES_FILE) -> list[Any]:
     raw_records: list[dict[str, Any]] = []
@@ -154,7 +139,7 @@ def load_companies(path: Path = COMPANIES_FILE) -> list[Any]:
 
 
 def index(client: QdrantClient | None = None) -> None:
-    """Main entry point: load → normalize → embed → upsert."""
+    """Main entry point: load -> normalize -> embed -> upsert."""
     if client is None:
         client = QdrantClient(location=QDRANT_URL)
 
@@ -162,22 +147,16 @@ def index(client: QdrantClient | None = None) -> None:
 
     companies = load_companies()
 
-    # Build NAICS inventory and persist
     inventory = _build_naics_inventory(companies)
     NAICS_INVENTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
     with NAICS_INVENTORY_FILE.open("w") as f:
         json.dump(inventory, f, indent=2)
     logger.info("Wrote NAICS inventory (%d codes) to %s", len(inventory), NAICS_INVENTORY_FILE)
 
-    # Build embedding texts
     texts = [build_embedding_text(c, c.raw) for c in companies]
-
-    # Encode in batches with progress bar
-    logger.info("Encoding %d companies with %s …", len(companies), "BAAI/bge-m3")
-    from src.indexing.embedding import encode_texts
+    logger.info("Encoding %d companies with %s ...", len(companies), EMBEDDING_MODEL)
     embeddings = encode_texts(texts)
 
-    # Upsert in batches
     total_batches = math.ceil(len(companies) / INDEXER_BATCH_UPSERT)
     with tqdm(total=len(companies), desc="Upserting to Qdrant") as pbar:
         for batch_idx in range(total_batches):
@@ -189,7 +168,6 @@ def index(client: QdrantClient | None = None) -> None:
             points = []
             for i, (company, vector) in enumerate(zip(batch_companies, batch_embeddings)):
                 payload = _build_payload(company)
-                # Use a stable integer ID derived from position
                 point_id = start + i
                 points.append(
                     PointStruct(

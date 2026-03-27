@@ -8,7 +8,7 @@ class LocationConstraint(BaseModel):
     raw: str = Field(description="Original location string from the query")
     resolved_countries: list[str] = Field(
         default_factory=list,
-        description="ISO-2 country codes resolved by the LLM (e.g. 'Scandinavia' → ['SE','NO','DK','FI'])",
+        description="ISO-2 country codes resolved by the LLM (e.g. 'Scandinavia' -> ['SE','NO','DK','FI'])",
     )
 
 

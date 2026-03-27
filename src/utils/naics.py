@@ -12,10 +12,10 @@ def naics_score(company_code: str | None, query_codes: list[str]) -> float:
     """Return the best NAICS alignment score between a company code and query codes.
 
     Scoring hierarchy:
-        exact 6-digit match  → 1.0
-        same 4-digit prefix  → 0.7
-        same 2-digit sector  → 0.3
-        no match             → 0.0
+        exact 6-digit match  -> 1.0
+        same 4-digit prefix  -> 0.7
+        same 2-digit sector  -> 0.3
+        no match             -> 0.0
     """
     if not company_code or not query_codes:
         return NAICS_SCORE_NONE
@@ -29,7 +29,7 @@ def naics_score(company_code: str | None, query_codes: list[str]) -> float:
             continue
 
         if c == q:
-            return NAICS_SCORE_EXACT  # can't do better
+            return NAICS_SCORE_EXACT
 
         if len(c) >= 4 and len(q) >= 4 and c[:4] == q[:4]:
             best = max(best, NAICS_SCORE_4DIGIT)

@@ -20,19 +20,11 @@ from src.utils.llm_client import structured_completion
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Structured response the LLM must return for each batch
-# ---------------------------------------------------------------------------
-
 class _BatchVerdict(BaseModel):
     verdicts: list[JudgeVerdict] = Field(
         description="One verdict per company in the batch, in the same order"
     )
 
-
-# ---------------------------------------------------------------------------
-# Prompt construction
-# ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
 You are an expert company qualification analyst.
@@ -50,19 +42,19 @@ Rules:
 Calibration examples:
 [TRUE POSITIVE] Query: "B2B SaaS companies in Germany with >100 employees"
   Profile: "Acme GmbH, Berlin, 250 employees, Business-to-Business, Software-as-a-Service"
-  → qualified=true, confidence=0.95
-  → matched: ["country=DE", "business_model=Business-to-Business", "employee_count=250>100", "SaaS"]
+  -> qualified=true, confidence=0.95
+  -> matched: ["country=DE", "business_model=Business-to-Business", "employee_count=250>100", "SaaS"]
 
 [TRUE NEGATIVE] Query: "B2B SaaS companies in Germany with >100 employees"
   Profile: "Beta Corp, Paris, 300 employees, Business-to-Consumer, e-commerce platform"
-  → qualified=false, confidence=0.90
-  → failed: ["country=FR≠DE", "business_model=B2C≠B2B", "not SaaS"]
+  -> qualified=false, confidence=0.90
+  -> failed: ["country=FR!=DE", "business_model=B2C!=B2B", "not SaaS"]
 
 [BORDERLINE] Query: "B2B SaaS companies in Germany with >100 employees"
   Profile: "Gamma AG, Munich, employee_count=unknown, cloud software, B2B"
-  → qualified=true, confidence=0.55
-  → matched: ["country=DE", "business_model=B2B", "cloud software≈SaaS"]
-  → failed: ["employee_count unknown"]
+  -> qualified=true, confidence=0.55
+  -> matched: ["country=DE", "business_model=B2B", "cloud software~=SaaS"]
+  -> failed: ["employee_count unknown"]
 """
 
 
@@ -120,16 +112,12 @@ def _build_batch_prompt(
     )
 
 
-# ---------------------------------------------------------------------------
-# Post-validation
-# ---------------------------------------------------------------------------
-
 def _validate_verdict(verdict: JudgeVerdict, match: CompanyMatch) -> JudgeVerdict:
     """Ensure matched_criteria refer to actual profile content.
 
     This is a lightweight sanity check: if matched_criteria names a field
     value that doesn't appear anywhere in the profile text, drop that criterion.
-    We don't hard-fail — the verdict stands but criteria are cleaned up.
+    We don't hard-fail - the verdict stands but criteria are cleaned up.
     """
     payload: dict[str, Any] = match.company.raw or {}
     profile_blob = " ".join(
@@ -153,10 +141,6 @@ def _validate_verdict(verdict: JudgeVerdict, match: CompanyMatch) -> JudgeVerdic
     return verdict
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 def _run_batch(
     query: str,
     semantic_criteria: str,
@@ -175,7 +159,7 @@ def _run_batch(
     # Align verdict count with batch size
     if len(verdicts) < len(batch):
         logger.warning(
-            "Judge returned %d verdicts for batch of %d — padding with disqualified",
+            "Judge returned %d verdicts for batch of %d - padding with disqualified",
             len(verdicts),
             len(batch),
         )
@@ -220,17 +204,16 @@ def run_judge(
         candidates = matches[:JUDGE_TYPE_C_TOP_K]
 
     if not candidates:
-        logger.info("No candidates selected for Judge — skipping")
+        logger.info("No candidates selected for Judge - skipping")
         return matches
 
     logger.info(
         "Running Judge on %d candidates (%s mode)", len(candidates), query_type
     )
 
-    # Build an id → match index for fast lookup
+    # Build an id -> match index for fast lookup
     id_to_match: dict[str, CompanyMatch] = {m.company.id: m for m in matches}
 
-    # Process in batches
     semantic = intent.semantic_criteria or ""
     for i in range(0, len(candidates), JUDGE_BATCH_SIZE):
         batch = candidates[i : i + JUDGE_BATCH_SIZE]

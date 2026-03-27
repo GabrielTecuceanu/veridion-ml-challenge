@@ -48,7 +48,7 @@ def structured_completion(
     """Call Ollama with instructor-enforced structured output.
 
     Retries up to *max_retries* times on transient failures with exponential
-    back-off (1s, 2s, 4s …).
+    back-off (1s, 2s, 4s ...).
     """
     client = get_client()
     messages: list[dict[str, str]] = []
@@ -70,7 +70,7 @@ def structured_completion(
             last_exc = exc
             wait = 2 ** attempt
             logger.warning(
-                "LLM call failed (attempt %d/%d): %s — retrying in %ds",
+                "LLM call failed (attempt %d/%d): %s - retrying in %ds",
                 attempt + 1,
                 max_retries,
                 exc,

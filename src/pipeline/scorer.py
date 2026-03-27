@@ -18,10 +18,6 @@ from src.utils.naics import best_naics_score
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Keyword overlap
-# ---------------------------------------------------------------------------
-
 def _keyword_overlap(company: Any, keywords: list[str]) -> float:
     """Fraction of query keywords found anywhere in the company's text fields."""
     if not keywords:
@@ -44,10 +40,6 @@ def _keyword_overlap(company: Any, keywords: list[str]) -> float:
     hits = sum(1 for kw in keywords if kw.lower() in text_blob)
     return hits / len(keywords)
 
-
-# ---------------------------------------------------------------------------
-# Constraint satisfaction
-# ---------------------------------------------------------------------------
 
 def _satisfies_numeric(value: float | None, nc: NumericConstraint) -> bool | None:
     """True/False if value is known; None if value is missing."""
@@ -72,10 +64,10 @@ def _satisfies_numeric(value: float | None, nc: NumericConstraint) -> bool | Non
 def _constraint_satisfaction(company: Any, intent: QueryIntent) -> float:
     """Score how well the company satisfies hard numeric + boolean constraints.
 
-    - Missing field → 0.5 (uncertain, not penalised to 0)
-    - Satisfied     → 1.0
-    - Violated      → 0.0
-    - No constraints → 1.0 (fully satisfied by definition)
+    - Missing field -> 0.5 (uncertain, not penalised to 0)
+    - Satisfied     -> 1.0
+    - Violated      -> 0.0
+    - No constraints -> 1.0 (fully satisfied by definition)
     """
     checks: list[float] = []
 
@@ -114,10 +106,6 @@ def _constraint_satisfaction(company: Any, intent: QueryIntent) -> float:
     return sum(checks) / len(checks)
 
 
-# ---------------------------------------------------------------------------
-# NAICS alignment
-# ---------------------------------------------------------------------------
-
 def _naics_alignment(company: Any, query_codes: list[str]) -> float:
     if not query_codes:
         return NULL_FIELD_SCORE
@@ -135,10 +123,6 @@ def _naics_alignment(company: Any, query_codes: list[str]) -> float:
     return best_naics_score(primary_code, secondary_codes, query_codes)
 
 
-# ---------------------------------------------------------------------------
-# Main scoring entry point
-# ---------------------------------------------------------------------------
-
 def score_matches(
     matches: list[CompanyMatch],
     intent: QueryIntent,
@@ -152,27 +136,20 @@ def score_matches(
         constraint_sat     0.20
         data_completeness  0.05
 
-    Null fields score NULL_FIELD_SCORE (0.5) — uncertain, not penalised to 0.
+    Null fields score NULL_FIELD_SCORE (0.5) - uncertain, not penalised to 0.
     """
     for match in matches:
         company = match.company
         payload: dict = company.raw or {}
 
-        # Vector similarity (already in [0,1] for cosine after normalisation)
+        # cosine similarity is already normalized to [0,1]
         vec_sim = match.vector_similarity
         if vec_sim is None:
             vec_sim = NULL_FIELD_SCORE
 
-        # NAICS alignment
         naics = _naics_alignment(company, intent.naics_codes)
-
-        # Keyword overlap
         kw = _keyword_overlap(company, intent.industry_keywords)
-
-        # Constraint satisfaction
         csat = _constraint_satisfaction(company, intent)
-
-        # Data completeness (pre-computed in payload; fallback to 0.5)
         completeness = payload.get("data_completeness", NULL_FIELD_SCORE)
 
         score = (
@@ -193,10 +170,7 @@ def score_matches(
         if "stage3" not in match.qualification_path:
             match.qualification_path.append("stage3")
 
-    # Sort descending by score
     matches.sort(key=lambda m: m.score, reverse=True)
-
-    # Assign ranks
     for rank, match in enumerate(matches, 1):
         match.rank = rank
 

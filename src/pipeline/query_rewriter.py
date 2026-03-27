@@ -27,7 +27,7 @@ Rules:
 - Write each variant as a short, self-contained search query.
 - Each variant must probe a distinct semantic neighbourhood
   (e.g. one focuses on materials, one on processes, one on certifications).
-- Do NOT just add synonyms — write genuinely different queries.
+- Do NOT just add synonyms - write genuinely different queries.
 - Avoid mentioning the end-customer / buyer in the rewritten queries.
 - Return exactly the number of queries requested.
 """

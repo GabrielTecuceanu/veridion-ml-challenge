@@ -72,7 +72,7 @@ def run_all(queries: list[str], ensure_index: bool = True) -> None:
         try:
             result = orchestrator.run(query)
         except Exception as exc:
-            logger.error("Query failed: %r — %s", query, exc)
+            logger.error("Query failed: %r - %s", query, exc)
             continue
 
         slug = _slug(query)
@@ -81,7 +81,7 @@ def run_all(queries: list[str], ensure_index: bool = True) -> None:
         with out_path.open("w") as f:
             json.dump(payload, f, indent=2)
         logger.info(
-            "Wrote %d qualified companies → %s",
+            "Wrote %d qualified companies -> %s",
             len(result.qualified_companies),
             out_path,
         )

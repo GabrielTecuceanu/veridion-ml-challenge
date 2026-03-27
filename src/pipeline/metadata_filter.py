@@ -27,7 +27,7 @@ def _null_inclusive(
     the field absent (has_field == False).
 
     This implements the null-inclusive OR logic: never hard-exclude a company
-    just because a field is missing — let Stage 3 penalise it instead.
+    just because a field is missing - let Stage 3 penalise it instead.
     """
     return Filter(
         should=[
@@ -53,37 +53,32 @@ def build_filter(intent: QueryIntent) -> Filter | None:
     - All clauses are AND-combined (must list).
     - Numeric filters use null-inclusive OR so missing-data companies survive.
     - Location filter: if resolved_countries is non-empty, match those codes OR
-      null country — same null-inclusive pattern.
+      null country - same null-inclusive pattern.
     - NAICS sector filter: 2-digit prefix match on naics_2digit field OR null.
     - Returns None when there are no applicable filters (pass-all).
     """
     must: list[Any] = []
 
-    # --- Location -------------------------------------------------------
     if intent.location and intent.location.resolved_countries:
         countries = [c.upper() for c in intent.location.resolved_countries]
         must.append(
             Filter(
                 should=[
                     FieldCondition(key="country_code", match=MatchAny(any=countries)),
-                    # null country_code: company has no country recorded
                     FieldCondition(key="country_code", is_null=True),
                 ]
             )
         )
 
-    # --- Boolean filters ------------------------------------------------
     for field, value in intent.boolean_filters.items():
         must.append(FieldCondition(key=field, match=MatchValue(value=value)))
 
-    # --- Business model -------------------------------------------------
     if intent.business_model_filter:
         canonical = _resolve_business_models(intent.business_model_filter)
         must.append(
             FieldCondition(key="business_model", match=MatchAny(any=canonical))
         )
 
-    # --- NAICS sector (2-digit) ----------------------------------------
     if intent.naics_codes:
         sectors = naics_prefix_filter(intent.naics_codes, prefix_len=2)
         if sectors:
@@ -98,7 +93,6 @@ def build_filter(intent: QueryIntent) -> Filter | None:
                 )
             )
 
-    # --- Numeric filters ------------------------------------------------
     for nc in intent.numeric_filters:
         field = nc.field
         has_field = f"has_{field}"
@@ -120,7 +114,7 @@ def build_filter(intent: QueryIntent) -> Filter | None:
                 key=field, range=Range(gte=nc.value, lte=nc.value)
             )
         else:
-            logger.warning("Unknown numeric operator %r — skipping", nc.operator)
+            logger.warning("Unknown numeric operator %r - skipping", nc.operator)
             continue
 
         must.append(_null_inclusive(field, has_field, range_cond))

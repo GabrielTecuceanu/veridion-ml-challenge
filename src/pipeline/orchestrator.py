@@ -7,7 +7,7 @@ from typing import Any
 from qdrant_client import QdrantClient
 
 from src.config import QDRANT_URL
-from src.indexing.indexer import load_companies, index
+from src.indexing.indexer import index
 from src.models.company import CompanyMatch
 from src.models.query_intent import QueryIntent
 from src.pipeline.judge import run_judge
@@ -41,9 +41,9 @@ class PipelineResult:
 class Orchestrator:
     """Routes queries through the correct stage sequence based on query type.
 
-    Type A (structured):   Stage 1 → Stage 3 → output
-    Type B (hybrid):       Stage 1 → Stage 2 → Stage 3 → Stage 4 (borderline)
-    Type C (reasoning):    Stage 0.5 → Stage 1+2 → Stage 3 → Stage 4 (top 25)
+    Type A (structured):   Stage 1 -> Stage 3 -> output
+    Type B (hybrid):       Stage 1 -> Stage 2 -> Stage 3 -> Stage 4 (borderline)
+    Type C (reasoning):    Stage 0.5 -> Stage 1+2 -> Stage 3 -> Stage 4 (top 25)
     """
 
     def __init__(self, client: QdrantClient | None = None, ensure_index: bool = False):
@@ -51,9 +51,7 @@ class Orchestrator:
         if ensure_index:
             index(self._client)
 
-    # ------------------------------------------------------------------
-    # Stage 1: metadata-filtered scroll (Type A only — no vector search)
-    # ------------------------------------------------------------------
+    # Stage 1: metadata-filtered scroll (Type A only - no vector search)
 
     def _stage1_scroll(self, qdrant_filter: Any) -> list[CompanyMatch]:
         """For Type A: retrieve all matching companies via scroll (no vector)."""
@@ -62,7 +60,7 @@ class Orchestrator:
         from src.pipeline.metadata_filter import tag_missing_data
         from src.models.company import Company
 
-        scroll_filter = qdrant_filter  # may be None → returns all
+        scroll_filter = qdrant_filter  # may be None -> returns all
         offset = None
         all_points = []
 
@@ -120,37 +118,28 @@ class Orchestrator:
         logger.info("Stage 1 scroll returned %d companies", len(matches))
         return matches
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def run(self, raw_query: str) -> PipelineResult:
         """Execute the full pipeline for a single query."""
         logger.info("=== Starting pipeline for: %r ===", raw_query)
 
-        # Stage 0: parse query
         intent = parse_query(raw_query)
         query_type = intent.query_type
         attrition = StageAttrition()
 
-        # Stage 1: build Qdrant filter
         qdrant_filter = build_filter(intent)
 
-        # ---------------------------------------------------------------
-        # Route by query type
-        # ---------------------------------------------------------------
         if query_type == "structured":
-            # Type A: scroll with filter → score → no Judge
+            # Type A: scroll with filter -> score -> no Judge
             matches = self._stage1_scroll(qdrant_filter)
             attrition.after_stage1 = len(matches)
-            attrition.after_stage2 = len(matches)  # skipped
+            attrition.after_stage2 = len(matches)
 
             matches = score_matches(matches, intent)
             attrition.after_stage3 = len(matches)
-            attrition.after_stage4 = len(matches)  # skipped
+            attrition.after_stage4 = len(matches)
 
         elif query_type == "hybrid":
-            # Type B: filter + vector → score → Judge (borderline)
+            # Type B: filter + vector -> score -> Judge (borderline)
             matches = search(raw_query, self._client, qdrant_filter)
             attrition.after_stage1 = len(matches)
             attrition.after_stage2 = len(matches)
@@ -165,7 +154,7 @@ class Orchestrator:
             attrition.after_stage4 = sum(1 for m in matches if m.score > 0)
 
         else:
-            # Type C: rewrite → filter + multi-vector → score → Judge (top 25)
+            # Type C: rewrite -> filter + multi-vector -> score -> Judge (top 25)
             variants = rewrite_query(intent)
             all_queries = [raw_query] + variants
 
@@ -184,7 +173,6 @@ class Orchestrator:
             matches = run_judge(matches, intent, raw_query, query_type)
             attrition.after_stage4 = sum(1 for m in matches if m.score > 0)
 
-        # Keep only companies that survived (score > 0)
         qualified = [m for m in matches if m.score > 0]
 
         logger.info(

@@ -86,11 +86,11 @@ def normalize_company(raw: dict[str, Any]) -> Company:
     """Normalize a raw JSONL record into a Company model.
 
     Handles:
-    - NAICS dict-literal strings → dicts
-    - country_code lowercase → uppercase
+    - NAICS dict-literal strings -> dicts
+    - country_code lowercase -> uppercase
     - revenue float cap at $10T
-    - address string → dict
-    - employee_count / year_founded → int
+    - address string -> dict
+    - employee_count / year_founded -> int
     """
     address = _parse_address(raw.get("address"))
     country_code = _normalize_country_code(address.get("country_code"))
@@ -118,10 +118,8 @@ def normalize_company(raw: dict[str, Any]) -> Company:
     if not isinstance(business_model, list):
         business_model = []
 
-    # Build the id from website (unique identifier in the dataset)
+    # website is the unique identifier in the dataset
     company_id = (raw.get("website") or "").strip()
-
-    # Synthesize description from available fields if empty
     description: str = (raw.get("description") or "").strip()
 
     return Company(

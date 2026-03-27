@@ -22,14 +22,12 @@ def _scored_point_to_match(point: ScoredPoint) -> CompanyMatch:
     """
     payload: dict[str, Any] = point.payload or {}
 
-    # Reconstruct primary_naics dict from flat payload fields set by indexer
     primary_naics: dict | None = None
     pn_code = payload.get("primary_naics_code")
     pn_label = payload.get("primary_naics_label")
     if pn_code:
         primary_naics = {"code": pn_code, "label": pn_label or ""}
 
-    # Reconstruct secondary_naics list
     sec_codes: list[str] = payload.get("secondary_naics_codes") or []
     secondary_naics = [{"code": c, "label": ""} for c in sec_codes]
 
@@ -53,7 +51,7 @@ def _scored_point_to_match(point: ScoredPoint) -> CompanyMatch:
 
     return CompanyMatch(
         company=company,
-        score=0.0,  # filled by scorer
+        score=0.0,
         vector_similarity=point.score,
         missing_data=missing,
         qualification_path=["stage2"],
@@ -66,18 +64,7 @@ def search(
     qdrant_filter: Filter | None = None,
     top_k: int = VECTOR_SEARCH_TOP_K,
 ) -> list[CompanyMatch]:
-    """Stage 2: embed *query_text* and retrieve the top-k companies from Qdrant.
-
-    Args:
-        query_text:    Raw text to embed (can be the original query or a
-                       rewritten variant from Stage 0.5).
-        client:        Active QdrantClient instance.
-        qdrant_filter: Optional payload filter from Stage 1.
-        top_k:         Number of results to return.
-
-    Returns:
-        List of CompanyMatch objects ordered by descending vector similarity.
-    """
+    """Stage 2: embed query_text and retrieve top-k companies from Qdrant."""
     logger.debug("Embedding query for vector search: %r", query_text[:120])
     vectors = encode_texts([query_text])
     query_vector = vectors[0].tolist()

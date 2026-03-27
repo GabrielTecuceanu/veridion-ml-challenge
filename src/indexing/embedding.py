@@ -25,7 +25,7 @@ def get_model() -> TextEmbedding:
 def build_embedding_text(company: Company, raw: dict[str, Any] | None = None) -> str:
     """Build a labeled-prefix text string for embedding.
 
-    Uses labeled field prefixes ("Industry: …", "Markets served: …") rather
+    Uses labeled field prefixes ("Industry: ...", "Markets served: ...") rather
     than raw concatenation so the embedding model can distinguish field types.
     """
     parts: list[str] = []
@@ -73,10 +73,9 @@ def encode_texts(texts: list[str]) -> np.ndarray:
     """Encode a list of texts into embeddings using the configured model.
 
     Returns a 2-D float32 array of shape (len(texts), VECTOR_SIZE).
-    FastEmbed uses ONNX Runtime — no PyTorch required.
+    FastEmbed uses ONNX Runtime - no PyTorch required.
     """
     model = get_model()
-    # fastembed.embed() returns a generator of numpy arrays
     embeddings = np.array(list(model.embed(texts, batch_size=EMBEDDING_BATCH_SIZE)))
     return embeddings.astype(np.float32)
 
