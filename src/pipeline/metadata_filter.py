@@ -67,9 +67,7 @@ def build_filter(intent: QueryIntent) -> Filter | None:
                 should=[
                     FieldCondition(key="country_code", match=MatchAny(any=countries)),
                     # null country_code: company has no country recorded
-                    FieldCondition(
-                        key="country_code", match=MatchValue(value=None)
-                    ),
+                    FieldCondition(key="country_code", is_null=True),
                 ]
             )
         )
@@ -95,9 +93,7 @@ def build_filter(intent: QueryIntent) -> Filter | None:
                         FieldCondition(
                             key="naics_2digit", match=MatchAny(any=sectors)
                         ),
-                        FieldCondition(
-                            key="naics_2digit", match=MatchValue(value=None)
-                        ),
+                        FieldCondition(key="naics_2digit", is_null=True),
                     ]
                 )
             )
